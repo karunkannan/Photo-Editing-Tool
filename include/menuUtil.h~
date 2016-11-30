@@ -1,0 +1,34 @@
+/* menuUtil.h
+ * Karun Kannan
+ * Aurin Chakravarty 
+ * 10/24/16
+ *
+ * Header for menuUtil.c, contains prototypes and an enumerated type
+ */
+
+
+#ifndef _BEN120_MENUUTIL_H
+#define _BEN120_MENUUTIL_H
+
+#include <stdio.h>
+
+#define DEFAULT_BUF_LEN 16
+
+typedef enum cmdType {QUIT, READ, WRITE, CROP, INVERT, SWAP, GRAYSCALE, BLUR, SHARPEN, BRIGHTEN, CONTRAST, NOOP, UNKNOWN} CommandType;
+
+/* main loop to get/process input */
+void menuLoop(FILE *fin, FILE *fout);
+
+/* reads one word from the specified stream, 
+ * and returns a pointer to a newly allocated
+ * space that exactly fits the word.  */
+char* readWord(FILE *fp);
+
+/* print out the menu to the specified stream */
+void printMenu(FILE *fp);
+
+/* process command string, convert it to
+ * a #defined value */
+CommandType getCommand(FILE *fin);
+
+#endif

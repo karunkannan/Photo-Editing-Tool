@@ -1,0 +1,37 @@
+
+#ifndef _IMAGEMANIP_H
+#define _IMAGEMANIP_H
+
+#include "ppmIO.h"
+
+// store PI as a constant 
+#define PI 3.14159265358979323846
+
+// macro to square a number 
+#define sq(X) ((X) * (X))
+
+
+/* takes an image and points defining a bounding box, 
+ * and crops that box out of the image, returning a newly
+ * created image containing just the cropped region
+ */
+Image* crop(Image* orig, Point start, Point end);
+
+/* invert the intensity of each channel */
+void invert(Image* im);
+
+/* swap color channels of an image */
+void swapRGB(Image* im);
+
+void grayscale(Image* im);
+
+Image*  blur(Image* im, float sigma);
+
+void blurPixel(Image* im, Image* blurIm,double* matrix, int i, int j, float sigma);
+
+double* buildMatrix(float sigma);
+
+void sharpen(Image* im, float sigma, float amt);
+
+unsigned char clamp(double colorValue);
+#endif

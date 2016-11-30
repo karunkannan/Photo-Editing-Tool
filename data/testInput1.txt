@@ -1,0 +1,26 @@
+r ../data/nika.ppm
+w ../data/copy.ppm
+c 60 25 600 565
+w ../data/crop.ppm
+r ../data/nika.ppm
+i
+w ../data/invert.ppm
+r ../data/nika.ppm
+s
+w ../data/swap.ppm
+r ../data/nika.ppm
+g
+w ../data/gray.ppm
+r ../data/nika.ppm
+bl 0.8
+w ../data/blur0.8.ppm
+r ../data/nika.ppm
+sh 0.5 2
+w ../data/sharp0.5_2.ppm
+r ../data/nika.ppm
+br 75
+w ../data/bright75.ppm
+r ../data/nika.ppm
+cn 2
+w ../data/contrast2.ppm
+q

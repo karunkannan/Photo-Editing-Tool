@@ -1,0 +1,68 @@
+/* ppmIO.h
+ * Karun Kannan
+ * Aurin Chakravarty 
+ * 10/24/2016
+ *
+ * Header for ppmIO.c, contains prototypes and structs,
+ */
+
+#ifndef _BEN120_PPMIO_H
+#define _BEN120_PPMIO_H
+
+#include <stdio.h>
+
+typedef struct _point {
+  int x;
+  int y;
+} Point;
+
+/* struct to store an RGB pixel,
+ * one byte per channel */
+typedef struct _pixel {
+  unsigned char r;
+  unsigned char g;
+  unsigned char b;
+} Pixel;
+
+typedef struct _image {
+  Pixel *data;
+  int rows;
+  int cols;
+  int colors;
+} Image;
+
+/* make the constant color-value pixels available */ 
+extern const Pixel black;
+extern const Pixel white;
+extern const Pixel red;
+extern const Pixel green;
+extern const Pixel blue;
+
+/* read PPM formatted image from a file */
+Pixel *readPPMFile(int *rows, int *cols, int * colors, FILE *fp);
+/* wrapper that takes a filename instead of a filehandle */
+Pixel *readPPM(int *rows, int *cols, int * colors, char *filename);
+/* wrapper that takes a filename, and allocates and returns an Image */
+Image *readPPMImage(char *filename);
+
+/* write a PPM formatted image file to disk */
+int writePPMFile(Pixel *image, int rows, int cols, int colors, FILE *fp);
+/* wrapper that takes a filename instead of a filehandle */
+int writePPM(Pixel *image, int rows, int cols, int colors, char *filename);
+/* wrapper that takes a filename and an Image */
+int writePPMImage(Image *im, char *filename);
+
+
+/* utility function to free inner and outer pointers,
+ * and set to null */
+void freeImage(Image **im);
+
+/* allocate a new image of the specified size;
+ * doesn't initialize pixel values */
+Image *makeImage(int rows, int cols);
+
+/* allocate and fill a new image to be a copy
+ * of the image given as a parameter */
+Image *makeCopy(Image *orig);
+
+#endif

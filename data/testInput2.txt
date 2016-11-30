@@ -1,0 +1,16 @@
+r ../data/nika.ppm
+g
+w ../data/out1.ppm
+bl 2
+w ../data/out2.ppm
+cn 1.5
+w ../data/out3.ppm
+br 50
+w ../data/out4.ppm
+cn 2.0
+w ../data/out5.ppm
+i
+w ../data/out6.ppm
+cn 0.5
+w ../data/out7.ppm
+q

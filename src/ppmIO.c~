@@ -1,0 +1,247 @@
+/* ppmIO.c
+ * Karun Kannnan
+ * Aurin Chakravarty 
+ * 10/24/16
+ *
+ * Functions for reading, writing, creating, copying, freeing images
+ * in the PPM format.
+ */
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include <ctype.h>
+#include "ppmIO.h"
+
+/* define some colors; they're globals, but 
+ * it's okay because they're constants (we can't
+ * really use #define since we want structs) */
+const Pixel black = {0, 0, 0};
+const Pixel white = {255, 255, 255};
+const Pixel red = {255, 0, 0};
+const Pixel green = {0, 255, 0};
+const Pixel blue = {0, 0, 255};
+
+/* wrapper that takes a filename, and allocates and returns an Image */
+Image *readPPMImage(char *filename) {
+  Image *im = malloc(sizeof(Image));
+  if (im) {
+    im->data = readPPM(&(im->rows), &(im->cols), &(im->colors), filename);
+    if (!im->data) {
+      free(im);
+      im = NULL;
+    }
+  }
+  return im;
+}
+
+/* wrapper that takes a filename instead of a filehandle 
+ */
+Pixel *readPPM(int *rows, int *cols, int * colors, char *filename) {
+  /* try to open file */
+  FILE *fp = fopen(filename, "r");
+
+  /* if we can, read from it */
+  if (fp) {
+    Pixel *im = readPPMFile(rows, cols, colors, fp);
+    fclose(fp);
+    return im;
+  }
+  /* if not, return NULL */
+  fprintf(stderr, "Error:ppmIO - failed to open \"%s\" for reading\n", filename);
+  return NULL;
+}
+
+/* helper function for readPPMFile, takes a filehandle
+ * and reads a number, but detects and skips comment lines
+ */
+int readNum(FILE *fp) {
+  assert(fp);
+
+  char ch;
+  while((ch = fgetc(fp)) == '#') { // # marks a comment line
+    while( ((ch=fgetc(fp)) != '\n') && ch != EOF ) {
+      /* discard characters til end of line */
+    }
+  }
+  ungetc(ch, fp); // put back the last thing we found
+
+  int val;
+  if (fscanf(fp, "%d", &val) == 1) { // try to get an int
+    while(isspace(ch = fgetc(fp))) {
+      // drop trailing whitespace
+    }
+    ungetc(ch, fp);
+    return val; // if we got one, return it
+  } else {
+    fprintf(stderr, "Error:ppmIO - failed to read number from file\n");
+    return -1;
+  }
+}
+
+/* try to read a PPM formatted image from the given filehandle.
+ * rows, cols, and colors will be set to the values read from the
+ * file, and a pointer to the newly-allocated array of pixels will
+ * be returned.
+ *
+ * Returns NULL if any error occurs while redaing.
+ */
+Pixel *readPPMFile(int *rows, int *cols, int * colors, FILE *fp) {
+  /* initialize things to error codes, in case we have to bail out early */
+  *rows = *cols = *colors = -1;
+
+  /* make sure we have a valid filehandle */
+  if (!fp) {
+    fprintf(stderr, "Error:ppmIO - given a bad filehandle\n");
+    return NULL;
+  }
+
+  /* read the first line; it should contain the
+   * tag "P6", if not this isn't really a PPM */
+  char tag[20];
+  tag[19]='\0';
+  fscanf(fp, "%19s\n", tag);
+  if (strncmp(tag, "P6", 20)) {
+    fprintf(stderr, "Error:ppmIO - not a PPM (bad tag)\n");
+    return NULL;
+  }
+
+  /* read image dimensions */
+  *cols = readNum(fp); // NOTE: cols, then rows (i.e. X size followed by Y size)
+  *rows = readNum(fp);
+  *colors = readNum(fp);
+
+  /* make sure we have valid dimensions */
+  if (*cols > 0 && *rows > 0 && *colors == 255) {
+    /* allocate the right amount of space */
+    Pixel *image = malloc(sizeof(Pixel) * (*rows) * (*cols));
+    if (image) { // if we got space, fill it up
+      if (fread(image, sizeof(Pixel), (*rows) * (*cols), fp) != (size_t)((*rows) * (*cols))) {
+        fprintf(stderr, "Error:ppmIO - failed to read data from file!\n");
+        free(image);
+        return NULL;
+      }
+      return image;
+    } else {
+      fprintf(stderr, "Error:ppmIO - failed to allocate space for image!\n");
+      return NULL;
+    }
+  } else {
+    fprintf(stderr, "Error:ppmIO - bad dimensions for image\n");
+    return NULL;
+  }
+
+  assert(0); // should never get here
+  return NULL;
+}
+
+
+/* wrapper that takes a filename and an Image 
+ */
+int writePPMImage (Image *im, char *filename) {
+  if (!filename || !im) {
+    fprintf(stderr, "Error:ppmIO - null pointer passed to writePPMImage\n");
+    return 0;
+  }
+
+  return writePPM(im->data, im->rows, im->cols, im->colors, filename);
+}
+
+/* wrapper that takes a filename instead of a filehandle 
+ */
+int writePPM(Pixel *image, int rows, int cols, int colors, char *filename) {
+  /* try to open file */
+  if (!filename || !image) {
+    fprintf(stderr, "Error:ppmIO - null pointer passed to writePPM\n");
+    return 0;
+  }
+  FILE *fp = fopen(filename, "w");
+
+  int written = 0;
+  /* if we can, write to it */
+  if (fp) {
+    written = writePPMFile(image, rows, cols, colors, fp);
+    fclose(fp);
+  } else {
+    fprintf(stderr, "Error:ppmIO - failed to open \"%s\" for writing\n", filename);
+  }
+  return written;
+}
+
+/* Write given image to disk as a PPM; 
+ */
+int writePPMFile(Pixel *image, int rows, int cols, int colors, FILE *fp) {
+  if (!fp) {
+    fprintf(stderr, "Error:ppmIO - writePPM given a bad filehandle\n");
+    return 0;
+  }
+
+  /* write tag */
+  fprintf(fp, "P6\n");
+  /* write dimensions */
+  fprintf(fp, "%d %d\n%d\n", cols, rows, colors);
+  /* write pixels */
+  int written = fwrite(image, sizeof(Pixel), rows * cols, fp);
+  if (written != (rows * cols)) {
+    fprintf(stderr, "Error:ppmIO - failed to write data to file!\n");
+  }
+
+  return written;
+}
+
+/* utility function to free inner and outer pointers,
+ * and set to null 
+ */
+void freeImage(Image **im) {
+  if (*im) {
+    free((*im)->data);
+  }
+  free(*im);
+  *im = NULL;
+}
+
+
+
+/* allocate a new image of the specified size;
+ * doesn't initialize pixel values */
+Image *makeImage (int rows, int cols) {
+  if (rows <= 0 || cols <= 0) { // make sure dimensions are valid
+    return NULL;
+  }
+  // allocate space
+  Image *im = malloc(sizeof(Image));
+  if (!im || rows <= 0 || cols <= 0) { 
+    return NULL;
+  }
+  // set size 
+  im->rows = rows;
+  im->cols = cols;
+  im->colors = 255;
+
+  // allocate pixel array
+  im->data = malloc((im->rows * im->cols) * sizeof(Pixel));
+  if (!im->data) {
+    free(im);
+    return NULL;
+  }
+
+  return im;
+}
+
+
+/* allocate and fill a new image to be a copy
+ * of the image given as a parameter */
+Image *makeCopy (Image *orig) {
+  // allocate space
+  Image *copy = makeImage(orig->rows, orig->cols);
+
+  // if we got space, copy pixel values
+  if (copy) {
+    memcpy(copy->data, orig->data, (copy->rows * copy->cols) * sizeof(Pixel));
+  }
+
+  return copy;
+}
+
