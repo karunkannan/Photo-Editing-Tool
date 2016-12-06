@@ -1,0 +1,28 @@
+//Karun Kannan
+
+Description: This program is a photo editing tool that edits PPM images. PPM image format
+	     was chosen due to lack of compression. The list of functions are listed below
+	     Note: XQuartz needed to open ppm files! 
+
+Functions:
+	1. Read Image: Image is read into the program for further manipulation
+	2. Write Image: Image is written
+	3. Crop: takes in 4 inputs to crop the image based on these corner coordinates
+	4. Invert: Inverts the color channels
+	5. Swap: Swaps the color channels
+	6. Grayscale: Convert the color channels to grayscale
+	7. Gaussian Blur: Blurs the image with radius sigma
+	8. Sharpen: Sharpens to some intensity with radius sigma
+	9. Brightness: Adjusts brightness based on amount specified
+	10. Contrast: Adjusts contrasts based on amount specifcied
+
+How Does it Work:
+    Run the file, the menu will guide you!
+
+Files: 
+       driver: drives the program
+       menuUtil: Prints menu and reads input, based on this input the program is able to
+       		 call othe functions to edit the image
+       ppmIO: Contains functions that read, write, and copy PPM files
+       imageManip: Functions that manipulate the images (Functions 3-10)
+       
